@@ -256,7 +256,9 @@ export default function Home() {
     acc[emotion].count += 1;
     return acc;
   }, {} as Record<string, { total: number; count: number }>);
-  const emotionChartData = Object.entries(emotionData).map(([emotion, data]) => ({
+  
+  // 🔧 LÍNEA CORREGIDA (el error estaba aquí)
+  const emotionChartData = Object.entries(emotionData).map(([emotion, data]: [string, { total: number; count: number }]) => ({
     emotion,
     avgPnL: data.total / data.count,
     totalPnL: data.total,
@@ -690,7 +692,7 @@ export default function Home() {
                     <th className="p-2 md:p-3 bg-gray-900">Estrategia</th>
                     <th className="p-2 md:p-3 bg-gray-900">Estado Emocional</th>
                     <th className="p-2 md:p-3 bg-gray-900">Acciones</th>
-                  </tr>
+                  <tr>
                 </thead>
                 <tbody>
                   {trades.map((trade) => (
