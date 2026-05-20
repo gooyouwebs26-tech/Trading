@@ -248,30 +248,34 @@ export default function Home() {
     runningBalanceForChart += trade.resultado - (trade.comisiones || 0);
     return { trade: index + 1, balance: runningBalanceForChart };
   });
+const emotionData = closedTrades.reduce((acc, trade) => {
+  const emotion = trade.estadoEmocional || 'No registrado';
+  if (!acc[emotion]) acc[emotion] = { total: 0, count: 0 };
+  acc[emotion].total += trade.resultado;
+  acc[emotion].count += 1;
+  return acc;
+}, {} as Record<string, { total: number; count: number }>);
 
-  const emotionData = closedTrades.reduce((acc, trade) => {
-    const emotion = trade.estadoEmocional || 'No registrado';
-    if (!acc[emotion]) acc[emotion] = { total: 0, count: 0 };
-    acc[emotion].total += trade.resultado;
-    acc[emotion].count += 1;
-    return acc;
-  }, {} as Record<string, { total: number; count: number }>);
-  
-  // 🔧 LÍNEA CORREGIDA (el error estaba aquí)
-  const emotionChartData = Object.entries(emotionData).map(([emotion, data]: [string, { total: number; count: number }]) => ({
-    emotion,
-    avgPnL: data.total / data.count,
+// Convertir a array con tipo explícito (solución definitiva)
+const emotionChartData: { emotion: string; avgPnL: number; totalPnL: number; trades: number }[] = [];
+
+for (const emotion in emotionData) {
+  const data = emotionData[emotion];
+  emotionChartData.push({
+    emotion: emotion,
+    avgPnL: data.count > 0 ? data.total / data.count : 0,
     totalPnL: data.total,
     trades: data.count
-  }));
+  });
+}
 
   const topTrades = [...closedTrades].sort((a, b) => b.resultado - a.resultado).slice(0, 10);
   const worstTrades = [...closedTrades].sort((a, b) => a.resultado - b.resultado).slice(0, 10);
 
-  const bestHour = Object.entries(hourData).sort((a, b) => b[1] - a[1])[0];
-  const bestDay = Object.entries(dayData).sort((a, b) => b[1] - a[1])[0];
-  const bestAsset = Object.entries(assetData).sort((a, b) => b[1] - a[1])[0];
-  const bestEmotion = Object.entries(emotionData).sort((a, b) => b[1].total - a[1].total)[0];
+const bestHour = Object.entries(hourData).sort((a, b) => (b[1] as number) - (a[1] as number))[0];
+const bestDay = Object.entries(dayData).sort((a, b) => (b[1] as number) - (a[1] as number))[0];
+const bestAsset = Object.entries(assetData).sort((a, b) => (b[1] as number) - (a[1] as number))[0];
+const bestEmotion = Object.entries(emotionData).sort((a, b) => (b[1] as { total: number; count: number }).total - (a[1] as { total: number; count: number }).total)[0];
 
   const COLORS = ['#00ccff', '#aa00ff', '#00ff88', '#ff3366', '#ffaa00', '#00ffcc'];
 
@@ -289,7 +293,7 @@ export default function Home() {
                 <Bar dataKey="pnl" fill="#00ccff" />
               </BarChart>
             </ResponsiveContainer>
-            {bestHour && <p className="text-xs text-cyan-400 mt-2">✨ Mejor hora: {bestHour[0]} (+${bestHour[1].toFixed(2)})</p>}
+            {bestHour && <p className="text-xs text-cyan-400 mt-2">✨ Mejor hora: {bestHour[0]} (+${(bestHour[1] as number).toFixed(2)})</p>}
           </>
         );
       case 'day':
@@ -304,7 +308,7 @@ export default function Home() {
                 <Bar dataKey="pnl" fill="#aa00ff" />
               </BarChart>
             </ResponsiveContainer>
-            {bestDay && <p className="text-xs text-purple-400 mt-2">✨ Mejor día: {bestDay[0]} (+${bestDay[1].toFixed(2)})</p>}
+            {bestDay && <p className="text-xs text-purple-400 mt-2">✨ Mejor día: {bestDay[0]} (+${(bestDay[1] as number).toFixed(2)})</p>}
           </>
         );
       case 'asset':
@@ -329,7 +333,7 @@ export default function Home() {
                 <Tooltip active={false} />
               </PieChart>
             </ResponsiveContainer>
-            {bestAsset && <p className="text-xs text-green-400 mt-2">✨ Mejor activo: {bestAsset[0]} (+${bestAsset[1].toFixed(2)})</p>}
+            {bestAsset && <p className="text-xs text-green-400 mt-2">✨ Mejor activo: {bestAsset[0]} (+${(bestAsset[1] as number).toFixed(2)})</p>}
           </>
         );
       case 'balance':
@@ -356,7 +360,7 @@ export default function Home() {
                 <Bar dataKey="avgPnL" fill="#ff3366" />
               </BarChart>
             </ResponsiveContainer>
-            {bestEmotion && <p className="text-xs text-red-400 mt-2">✨ Mejor estado: {bestEmotion[0]} (+${bestEmotion[1].total.toFixed(2)} total)</p>}
+            {bestEmotion && <p className="text-xs text-red-400 mt-2">✨ Mejor estado: {bestEmotion[0]} (+${(bestEmotion[1] as { total: number; count: number }).total.toFixed(2)} total)</p>}
           </>
         );
       case 'top':
@@ -673,7 +677,7 @@ export default function Home() {
             <p className="text-xs text-gray-500 mt-1">Total: {trades.length} trades | Abiertos: {openTrades.length} | Cerrados: {closedTrades.length}</p>
           </div>
           
-          {loading ? (
+                    {loading ? (
             <div className="p-8 text-center text-gray-400">Cargando trades...</div>
           ) : trades.length === 0 ? (
             <div className="p-8 text-center text-gray-400">No hay trades aún. ¡Abre tu primer trade!</div>
@@ -692,65 +696,70 @@ export default function Home() {
                     <th className="p-2 md:p-3 bg-gray-900">Estrategia</th>
                     <th className="p-2 md:p-3 bg-gray-900">Estado Emocional</th>
                     <th className="p-2 md:p-3 bg-gray-900">Acciones</th>
-                  <tr>
+                  </tr>
                 </thead>
                 <tbody>
-                  {trades.map((trade) => (
-                    <tr 
-                      key={trade.id} 
-                      className={`border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer transition-colors ${trade.estado === 'abierto' ? 'bg-red-900/10' : ''}`}
-                      onClick={() => {
-                        setSelectedTrade(trade);
-                        setIsDetailsModalOpen(true);
-                      }}
-                    >
-                      <td className="p-2 md:p-3">
-                        {trade.estado === 'abierto' ? (
-                          <span className="px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[10px] md:text-xs bg-red-900 text-red-300">🔥 Abierto</span>
-                        ) : (
-                          <span className="px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[10px] md:text-xs bg-green-900 text-green-300">✅ Cerrado</span>
-                        )}
-                      </td>
-                      <td className="p-2 md:p-3">{trade.fechaApertura}</td>
-                      <td className="p-2 md:p-3">{trade.horaApertura}</td>
-                      <td className="p-2 md:p-3 font-bold text-cyan-400">{trade.activo}</td>
-                      <td className="p-2 md:p-3">{trade.tipo}</td>
-                      <td className="p-2 md:p-3 text-gray-300">
-                        {trade.precioEntrada ? `$${trade.precioEntrada}` : '-'}
-                        {trade.cantidadUsdt && <span className="text-gray-500 block text-[10px] md:text-xs">${trade.cantidadUsdt} | {trade.apalancamiento}x</span>}
-                      </td>
-                      <td className={`p-2 md:p-3 font-bold ${trade.resultado > 0 ? 'text-green-400' : trade.resultado < 0 ? 'text-red-400' : 'text-gray-400'}`}>
-                        {trade.resultado ? (trade.resultado > 0 ? '+' : '') + trade.resultado + ' USDT' : 'Pendiente'}
-                      </td>
-                      <td className="p-2 md:p-3 text-gray-300 max-w-[100px] md:max-w-[150px] truncate" title={trade.estrategia}>
-                        {trade.estrategia || '-'}
-                      </td>
-                      <td className="p-2 md:p-3">
-                        <span className={`px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[10px] md:text-xs ${
-                          trade.estadoEmocional === 'Tranquilo' ? 'bg-green-900 text-green-300' :
-                          trade.estadoEmocional === 'Lúcido' ? 'bg-cyan-900 text-cyan-300' :
-                          trade.estadoEmocional === 'Nervioso' ? 'bg-yellow-900 text-yellow-300' :
-                          'bg-red-900 text-red-300'
-                        }`}>
-                          {trade.estadoEmocional || '-'}
-                        </span>
-                      </td>
-                      <td className="p-2 md:p-3">
-                        {trade.estado === 'abierto' && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedTradeToClose(trade);
-                              setIsCloseTradeModalOpen(true);
-                            }}
-                            className="bg-green-600 hover:bg-green-500 px-2 md:px-3 py-0.5 md:py-1 rounded text-[10px] md:text-xs font-bold transition-colors"
-                          >
-                            Cerrar
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  {trades.map((trade, idx) => {
+                    const isOpen = trade.estado === "abierto";
+                    const isPositive = trade.resultado > 0;
+                    const isNegative = trade.resultado < 0;
+                    let emotionClass = "bg-red-900 text-red-300";
+                    if (trade.estadoEmocional === "Tranquilo") emotionClass = "bg-green-900 text-green-300";
+                    else if (trade.estadoEmocional === "Lúcido") emotionClass = "bg-cyan-900 text-cyan-300";
+                    else if (trade.estadoEmocional === "Nervioso") emotionClass = "bg-yellow-900 text-yellow-300";
+                    
+                    return (
+                      <tr
+                        key={trade.id || idx}
+                        className={"border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer transition-colors " + (isOpen ? "bg-red-900/10" : "")}
+                        onClick={() => {
+                          setSelectedTrade(trade);
+                          setIsDetailsModalOpen(true);
+                        }}
+                      >
+                        <td className="p-2 md:p-3">
+                          {isOpen ? (
+                            <span className="px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[10px] md:text-xs bg-red-900 text-red-300">🔥 Abierto</span>
+                          ) : (
+                            <span className="px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[10px] md:text-xs bg-green-900 text-green-300">✅ Cerrado</span>
+                          )}
+                        </td>
+                        <td className="p-2 md:p-3">{trade.fechaApertura}</td>
+                        <td className="p-2 md:p-3">{trade.horaApertura}</td>
+                        <td className="p-2 md:p-3 font-bold text-cyan-400">{trade.activo}</td>
+                        <td className="p-2 md:p-3">{trade.tipo}</td>
+                        <td className="p-2 md:p-3 text-gray-300">
+                          {trade.precioEntrada ? "$" + trade.precioEntrada : "-"}
+                          {trade.cantidadUsdt && <span className="text-gray-500 block text-[10px] md:text-xs">${trade.cantidadUsdt} | {trade.apalancamiento}x</span>}
+                        </td>
+                        <td className={"p-2 md:p-3 font-bold " + (isPositive ? "text-green-400" : isNegative ? "text-red-400" : "text-gray-400")}>
+                          {trade.resultado ? (isPositive ? "+" : "") + trade.resultado + " USDT" : "Pendiente"}
+                        </td>
+                        <td className="p-2 md:p-3 text-gray-300 max-w-[100px] md:max-w-[150px] truncate" title={trade.estrategia}>
+                          {trade.estrategia || "-"}
+                        </td>
+                        <td className="p-2 md:p-3">
+                          <span className={"px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[10px] md:text-xs " + emotionClass}>
+                            {trade.estadoEmocional || "-"}
+                          </span>
+                        </td>
+                        <td className="p-2 md:p-3">
+                          {isOpen && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedTradeToClose(trade);
+                                setIsCloseTradeModalOpen(true);
+                              }}
+                              className="bg-green-600 hover:bg-green-500 px-2 md:px-3 py-0.5 md:py-1 rounded text-[10px] md:text-xs font-bold transition-colors"
+                            >
+                              Cerrar
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
