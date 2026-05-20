@@ -1,0 +1,258 @@
+@import "tailwindcss";
+
+:root {
+  --neon-green: #00ff00;
+  --neon-red: #ff3366;
+  --neon-cyan: #00ccff;
+  --neon-purple: #aa00ff;
+  --neon-blue: #0066ff;
+  --dark-bg: #0a0a0a;
+  --card-bg: rgba(10, 10, 26, 0.7);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #000000;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Fondo con rayos eléctricos y ondas */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(ellipse at 20% 40%, rgba(0, 100, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(0, 150, 255, 0.1) 0%, transparent 50%),
+    repeating-linear-gradient(45deg, 
+      rgba(0, 100, 255, 0.02) 0px, 
+      rgba(0, 100, 255, 0.02) 2px,
+      transparent 2px,
+      transparent 8px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Rayos eléctricos animados */
+.lightning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.lightning::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 120%;
+  height: 120%;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 40px,
+    rgba(0, 150, 255, 0.03) 40px,
+    rgba(0, 150, 255, 0.03) 42px,
+    transparent 42px,
+    transparent 80px
+  );
+  animation: moveLightning 20s linear infinite;
+}
+
+@keyframes moveLightning {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  100% {
+    transform: translateX(100px) translateY(50px);
+  }
+}
+
+/* Ondas difuminadas estilo reactor */
+.waves {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.wave {
+  position: absolute;
+  bottom: -20%;
+  left: -10%;
+  width: 120%;
+  height: 40%;
+  background: radial-gradient(ellipse at center, rgba(0, 100, 255, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: waveAnimation 8s ease-in-out infinite;
+}
+
+.wave:nth-child(2) {
+  bottom: -30%;
+  animation-delay: -2s;
+  opacity: 0.6;
+  background: radial-gradient(ellipse at center, rgba(0, 150, 255, 0.08) 0%, transparent 70%);
+}
+
+.wave:nth-child(3) {
+  bottom: -40%;
+  animation-delay: -4s;
+  opacity: 0.4;
+  background: radial-gradient(ellipse at center, rgba(0, 200, 255, 0.06) 0%, transparent 70%);
+}
+
+@keyframes waveAnimation {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-30px) scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+/* Textos neón */
+.neon-text-green {
+  color: var(--neon-green);
+  text-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
+}
+
+.neon-text-red {
+  color: var(--neon-red);
+  text-shadow: 0 0 5px var(--neon-red), 0 0 10px var(--neon-red);
+}
+
+.neon-text-cyan {
+  color: var(--neon-cyan);
+  text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+}
+
+.neon-text-purple {
+  color: var(--neon-purple);
+  text-shadow: 0 0 5px var(--neon-purple), 0 0 10px var(--neon-purple);
+}
+
+.neon-text-blue {
+  color: var(--neon-blue);
+  text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue);
+}
+
+/* Bordes neón */
+.neon-border-cyan {
+  border: 1px solid var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 204, 255, 0.3), inset 0 0 10px rgba(0, 204, 255, 0.1);
+}
+
+.neon-border-purple {
+  border: 1px solid var(--neon-purple);
+  box-shadow: 0 0 15px rgba(170, 0, 255, 0.3);
+}
+
+/* Tarjetas con glow */
+.glow-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 204, 255, 0.2);
+}
+
+.glow-card:hover {
+  box-shadow: 0 0 25px rgba(0, 204, 255, 0.4);
+  border-color: rgba(0, 204, 255, 0.6);
+}
+
+/* Animación del reactor */
+@keyframes reactorPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 204, 255, 0.7);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 20px rgba(0, 204, 255, 0);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 204, 255, 0);
+    transform: scale(1);
+  }
+}
+
+.reactor-pulse {
+  animation: reactorPulse 0.6s ease-out;
+}
+
+/* Scrollbar estilo Iron Man */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #00ccff, #0066ff);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #33ddff, #2288ff);
+}
+/* ========================================
+   ARREGLANDO BOTONES QUE TUVE QUEÑIDOS
+   ======================================== */
+
+/* Esto aplica a TODOS los botones del panel */
+button, .button, [type="button"], [type="submit"] {
+  /* 👇 ESPACIO INTERNO para que el texto no pise los bordes */
+  padding: 8px 16px !important;
+  /* 👇 SEPARACIÓN ENTRE BOTONES */
+  margin: 4px 6px !important;
+  /* 👇 TAMAÑO DE LETRA JUSTO */
+  font-size: 14px !important;
+  /* 👇 ALTURA DE LÍNEA PARA QUE NO SE CORTEN LAS LETRAS */
+  line-height: 1.5 !important;
+  /* 👇 ANCHO MÍNIMO (opcional) */
+  min-width: 80px !important;
+  /* 👇 PARA QUE NO SE ROMPA EL TEXTO EN MÓVIL */
+  white-space: nowrap !important;
+}
+
+/* En móviles, si el texto es muy largo y se sale, que haga salto de línea */
+@media (max-width: 640px) {
+  button, .button {
+    white-space: normal !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Esto es para los grupos de botones (como los de "Abrir Trade" y "Historial") */
+.button-group, .flex.gap-3, .grid-cols-2.gap-3 {
+  gap: 8px !important;
+}
