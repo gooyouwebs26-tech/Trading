@@ -677,7 +677,7 @@ const bestEmotion = Object.entries(emotionData).sort((a, b) => (b[1] as { total:
             <p className="text-xs text-gray-500 mt-1">Total: {trades.length} trades | Abiertos: {openTrades.length} | Cerrados: {closedTrades.length}</p>
           </div>
           
-                    {loading ? (
+                          {loading ? (
             <div className="p-8 text-center text-gray-400">Cargando trades...</div>
           ) : trades.length === 0 ? (
             <div className="p-8 text-center text-gray-400">No hay trades aún. ¡Abre tu primer trade!</div>
@@ -763,7 +763,7 @@ const bestEmotion = Object.entries(emotionData).sort((a, b) => (b[1] as { total:
                 </tbody>
               </table>
             </div>
-          )}
+          )}    
         </div>
       </div>
 
