@@ -49,6 +49,9 @@ export default function Home() {
   // Estado para confirmación de reset
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
+  // 🔥 NUEVO: Estado para formaciones
+  const [formations, setFormations] = useState<any[]>([]);
+
   // Cargar trades al iniciar
   useEffect(() => {
     fetchTrades();
@@ -71,6 +74,40 @@ export default function Home() {
       setWithdrawals(parsed);
       const total = parsed.reduce((sum: number, w: WithdrawRecord) => sum + w.amount, 0);
       setTotalWithdrawn(total);
+    }
+  }, []);
+
+  // 🔥 NUEVO: Cargar formaciones guardadas
+  useEffect(() => {
+    const saved = localStorage.getItem('tradingFormations');
+    if (saved) {
+      setFormations(JSON.parse(saved));
+    } else {
+      // Datos de ejemplo para mostrar la primera vez
+      const ejemplos = [
+        {
+          id: '1',
+          nombre: 'Doble Techo BTC - 15m',
+          tipo: 'techo',
+          descripcion: 'Doble techo perfecto en BTC, con volumen decreciente en el segundo pico. Confirmación con vela bajista.',
+          fechaCreacion: '2024-01-15',
+          imagenes: [],
+          tags: ['BTC', '15m', 'bearish'],
+          lecciones: 'Esperar confirmación debajo del cuello. El stop loss va arriba del segundo pico.'
+        },
+        {
+          id: '2',
+          nombre: 'Hombro Cabeza Hombro ETH',
+          tipo: 'reversal',
+          descripcion: 'HCH invertido en ETH, volumen aumentando en la ruptura.',
+          fechaCreacion: '2024-01-20',
+          imagenes: [],
+          tags: ['ETH', '1h', 'bullish'],
+          lecciones: 'El volumen es clave para validar la figura.'
+        }
+      ];
+      setFormations(ejemplos);
+      localStorage.setItem('tradingFormations', JSON.stringify(ejemplos));
     }
   }, []);
 
@@ -155,19 +192,22 @@ export default function Home() {
     setWithdrawals(prev => [newWithdraw, ...prev]);
   };
 
+  // 🔥 NUEVO: Función para añadir formación (guardar en localStorage y actualizar estado)
   const addFormation = (newFormation: any) => {
-    console.log('📚 Nueva formación guardada:', newFormation.nombre);
+    const currentFormations = [...formations];
+    const updatedFormations = [...currentFormations, newFormation];
+    localStorage.setItem('tradingFormations', JSON.stringify(updatedFormations));
+    setFormations(updatedFormations);
+    console.log('📚 Formación guardada:', newFormation.nombre);
   };
 
   // FUNCIÓN DE RESET TOTAL - Borra todos los datos
   const resetAllData = async () => {
     try {
-      // 1. Borrar localStorage
       localStorage.removeItem('startBalance');
       localStorage.removeItem('withdrawHistory');
       localStorage.removeItem('tradingFormations');
       
-      // 2. Borrar trades del servidor usando DELETE
       const res = await fetch('/api/trades', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -179,12 +219,10 @@ export default function Home() {
         console.error('Error al resetear trades');
       }
       
-      // 3. Recargar la página
       window.location.reload();
       
     } catch (error) {
       console.error('Error al resetear:', error);
-      // Si falla, al menos recargar con localStorage limpio
       window.location.reload();
     }
   };
@@ -248,6 +286,7 @@ export default function Home() {
     runningBalanceForChart += trade.resultado - (trade.comisiones || 0);
     return { trade: index + 1, balance: runningBalanceForChart };
   });
+
 const emotionData = closedTrades.reduce((acc, trade) => {
   const emotion = trade.estadoEmocional || 'No registrado';
   if (!acc[emotion]) acc[emotion] = { total: 0, count: 0 };
@@ -256,7 +295,7 @@ const emotionData = closedTrades.reduce((acc, trade) => {
   return acc;
 }, {} as Record<string, { total: number; count: number }>);
 
-// Convertir a array con tipo explícito (solución definitiva)
+// Convertir a array con tipo explícito
 const emotionChartData: { emotion: string; avgPnL: number; totalPnL: number; trades: number }[] = [];
 
 for (const emotion in emotionData) {
@@ -438,7 +477,11 @@ const bestEmotion = Object.entries(emotionData).sort((a, b) => (b[1] as { total:
             ⚡ IRON TRADER PANEL ⚡
           </h1>
           <div className="flex gap-2 flex-wrap justify-center">
-            <FormationsMenu onAddFormation={() => setIsAddFormationModalOpen(true)} />
+            {/* 🔥 MODIFICADO: Pasamos formations como prop */}
+            <FormationsMenu 
+              formations={formations} 
+              onAddFormation={() => setIsAddFormationModalOpen(true)} 
+            />
             <button
               onClick={() => setShowOpenTradesList(!showOpenTradesList)}
               className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full font-bold text-xs md:text-sm transition-all ${
@@ -461,7 +504,6 @@ const bestEmotion = Object.entries(emotionData).sort((a, b) => (b[1] as { total:
             >
               📥 Exportar CSV 📥
             </button>
-            {/* BOTÓN DE RESET TOTAL */}
             <button
               onClick={() => setShowResetConfirm(true)}
               className="bg-red-700 hover:bg-red-600 px-3 md:px-4 py-1.5 md:py-2 rounded-full font-bold text-xs md:text-sm transition-all shadow-[0_0_15px_rgba(255,0,0,0.3)]"
@@ -677,14 +719,14 @@ const bestEmotion = Object.entries(emotionData).sort((a, b) => (b[1] as { total:
             <p className="text-xs text-gray-500 mt-1">Total: {trades.length} trades | Abiertos: {openTrades.length} | Cerrados: {closedTrades.length}</p>
           </div>
           
-                          {loading ? (
+          {loading ? (
             <div className="p-8 text-center text-gray-400">Cargando trades...</div>
           ) : trades.length === 0 ? (
             <div className="p-8 text-center text-gray-400">No hay trades aún. ¡Abre tu primer trade!</div>
           ) : (
             <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
               <table className="w-full text-xs md:text-sm">
-                <thead className="sticky top-0 bg-gray-900 z-10">
+                                <thead className="sticky top-0 bg-gray-900 z-10">
                   <tr className="text-left text-gray-400 border-b border-gray-700">
                     <th className="p-2 md:p-3 bg-gray-900">Estado</th>
                     <th className="p-2 md:p-3 bg-gray-900">Fecha</th>

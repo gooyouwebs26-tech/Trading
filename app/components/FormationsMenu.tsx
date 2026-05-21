@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface FormationImage {
@@ -21,60 +21,22 @@ interface Formation {
 }
 
 interface FormationsMenuProps {
+  formations: Formation[];
   onAddFormation: () => void;
 }
 
-export default function FormationsMenu({ onAddFormation }: FormationsMenuProps) {
+export default function FormationsMenu({ formations, onAddFormation }: FormationsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [formations, setFormations] = useState<Formation[]>([]);
   const [selectedFormation, setSelectedFormation] = useState<Formation | null>(null);
   const [filterTipo, setFilterTipo] = useState<string>('todos');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Cargar formaciones guardadas
-  useEffect(() => {
-    const saved = localStorage.getItem('tradingFormations');
-    if (saved) {
-      setFormations(JSON.parse(saved));
-    } else {
-      // Datos de ejemplo para mostrar
-      const ejemplos: Formation[] = [
-        {
-          id: '1',
-          nombre: 'Doble Techo BTC - 15m',
-          tipo: 'techo',
-          descripcion: 'Doble techo perfecto en BTC, con volumen decreciente en el segundo pico. Confirmación con vela bajista.',
-          fechaCreacion: '2024-01-15',
-          imagenes: [],
-          tags: ['BTC', '15m', 'bearish'],
-          lecciones: 'Esperar confirmación debajo del cuello. El stop loss va arriba del segundo pico.'
-        },
-        {
-          id: '2',
-          nombre: 'Hombro Cabeza Hombro ETH',
-          tipo: 'reversal',
-          descripcion: 'HCH invertido en ETH, volumen aumentando en la ruptura.',
-          fechaCreacion: '2024-01-20',
-          imagenes: [],
-          tags: ['ETH', '1h', 'bullish'],
-          lecciones: 'El volumen es clave para validar la figura.'
-        }
-      ];
-      setFormations(ejemplos);
-      localStorage.setItem('tradingFormations', JSON.stringify(ejemplos));
-    }
-  }, []);
-
-  // Guardar cuando cambien
-  useEffect(() => {
-    if (formations.length > 0) {
-      localStorage.setItem('tradingFormations', JSON.stringify(formations));
-    }
-  }, [formations]);
-
   const deleteFormation = (id: string) => {
     if (confirm('¿Eliminar esta formación?')) {
-      setFormations(prev => prev.filter(f => f.id !== id));
+      const updated = formations.filter(f => f.id !== id);
+      localStorage.setItem('tradingFormations', JSON.stringify(updated));
+      // Recargar para actualizar la vista (o se puede pasar setFormations desde Home)
+      window.location.reload();
     }
   };
 
@@ -239,7 +201,7 @@ export default function FormationsMenu({ onAddFormation }: FormationsMenuProps) 
   );
 }
 
-// Componente interno para el detalle (lo pongo aquí pero puedes separarlo)
+// Componente interno para el detalle
 function FormationDetailModal({ formation, onClose }: { formation: Formation; onClose: () => void }) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
@@ -273,7 +235,7 @@ function FormationDetailModal({ formation, onClose }: { formation: Formation; on
             <p className="text-sm text-gray-300">{formation.descripcion}</p>
           </div>
 
-          {/* Imágenes (hasta 5) */}
+          {/* Imágenes */}
           {formation.imagenes.length > 0 && (
             <div>
               <p className="text-sm text-cyan-400 mb-2">📸 Capturas ({formation.imagenes.length})</p>
